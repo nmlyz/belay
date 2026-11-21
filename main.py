@@ -34,6 +34,13 @@ def validate(text: str) -> None:
     if text.endswith("\n"):
         print("error: poem must not end with a newline", file=sys.stderr)
         sys.exit(1)
+    if "\r" in text:
+        print("error: poem must not contain carriage returns", file=sys.stderr)
+        sys.exit(1)
+    for i, line in enumerate(text.split("\n"), start=1):
+        if line != line.rstrip():
+            print(f"error: line {i} has trailing whitespace", file=sys.stderr)
+            sys.exit(1)
 
 
 def write_atomic(path: str, text: str) -> None:
@@ -62,6 +69,12 @@ def main() -> None:
     validate(text)
     path = os.path.join(out_dir, "entry.txt")
     write_atomic(path, text)
+    with open(path, "rb") as f:
+        written = f.read()
+    if written != text.encode("utf-8"):
+        print("error: written entry.txt does not match the poem", file=sys.stderr)
+        sys.exit(1)
+    print(f"wrote {len(written)} bytes to {path}")
 
 
 if __name__ == "__main__":
